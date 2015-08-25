@@ -25,14 +25,10 @@ void CalcDarkChannel(IplImage *darkchannel, IplImage *input, int radius)
 			st_row = i - radius, ed_row = i + radius;
 			st_col = j - radius, ed_col = j + radius;
 
-			if (st_row < 0)
-				st_row = 0;
-			if (ed_row >= height)
-				ed_row = height - 1;
-			if (st_col < 0)
-				st_col = 0;
-			if (ed_col >= width)
-				ed_col = width - 1;
+			st_row = st_row < 0 ? 0 : st_row;
+			ed_row = ed_row >= height ? (height - 1) : ed_row;
+			st_col = st_col < 0 ? 0 : st_col;
+			ed_col = ed_col >= width ? (width - 1) : ed_col;
 
 			int cur = 0;
 			int min = 300;
