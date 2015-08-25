@@ -1,5 +1,8 @@
 #include "dcp.h"
 
+#include <iostream>
+using namespace std;
+
 void dehaze(IplImage *recover, IplImage *input)
 {
 	int height = input->height;
@@ -11,8 +14,16 @@ void dehaze(IplImage *recover, IplImage *input)
 
 	int darkchannelradius = MIN(width, height) * 0.02;
 
+	
+
+	double Airlight[3] = { 0.0, 0.0, 0.0 };
 	CalcDarkChannel(darkchannel, input, darkchannelradius);
+	
+	CalcAirlight(darkchannel, input, Airlight);
+	
+	CalcTransmission(transmission, input, Airlight, darkchannelradius);
+	GuidedFilterColor(refine_transmission, input, transmission, 1e-6, 60);
+	CalcRecover(recover, input, refine_transmission, Airlight);
 
-
-
+	
 }

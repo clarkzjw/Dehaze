@@ -1,7 +1,13 @@
 #include "dcp_core.h"
 
-void Recover(IplImage *Result, IplImage *InputImage, double A[])
+void CalcRecover(IplImage *result, IplImage *input, IplImage *transmission, double A[])
 {
+	int height = input->height;
+	int width = input->width;
+	int widthstep = input->widthStep;
+	int gwidthstep = transmission->widthStep;
+	int nch = input->nChannels;
+
 	double t0 = 0.1;
 	double t, tmp_res;
 
@@ -9,27 +15,29 @@ void Recover(IplImage *Result, IplImage *InputImage, double A[])
 	int e = 0, number = 0;
 	double a = 0;
 
-	for (i = 1; i <= height; i++)
+	A[0] /= 255.0;
+	A[1] /= 255.0;
+	A[2] /= 255.0;
+
+	for (i = 0; i < height; i++)
 	{
-		for (j = 1; j <= width; j++)
+		for (j = 0; j < width; j++)
 		{
-			t = real_trans[e++];
+			t = *(uchar *)(transmission->imageData + i * gwidthstep + j);
 			t /= 255.0;
 			for (k = 0; k < 3; k++)
 			{
-				a = *(uchar *)(InputImage->imageData + (i - 1) * widthstep + (j - 1) * nch + k);
-				a /= 255;
+				a = *(uchar *)(input->imageData + (i) * widthstep + (j) * nch + k);
+				a /= 255.0;
 
-				tmp_res = ((a - A[k]) / MaxTwo(t, t0)) + A[k];
-
-				real_recover[number++] = tmp_res;
+				tmp_res = ((a - A[k]) / MAX(t, t0)) + A[k];
 
 				if (tmp_res > 1)
 					tmp_res = 1;
 				else if (tmp_res < 0)
 					tmp_res = 0;
 
-				*(uchar *)(Result->imageData + (i - 1) * widthstep + (j - 1) * nch + k) = tmp_res * 255.0;
+				*(uchar *)(result->imageData + (i) * widthstep + (j) * nch + k) = tmp_res * 255.0;
 			}
 		}
 	}

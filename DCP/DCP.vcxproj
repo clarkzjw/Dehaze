@@ -88,6 +88,7 @@
     <ClCompile Include="dcp.cpp" />
     <ClCompile Include="guidedfilter.cpp" />
     <ClCompile Include="recover.cpp" />
+    <ClCompile Include="test.cpp" />
     <ClCompile Include="transmission.cpp" />
   </ItemGroup>
   <ItemGroup>

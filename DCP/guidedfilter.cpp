@@ -42,9 +42,6 @@ void GuidedFilterColor(IplImage *q, IplImage *II, IplImage *p, double eps, int r
 
 	for (i = 1; i <= height; i++)
 	{
-		if (i % 10 == 0)
-			printf("%d\n", i);
-
 		for (j = 1; j <= width; j++)
 		{
 			st_row = i - r, ed_row = i + r;
