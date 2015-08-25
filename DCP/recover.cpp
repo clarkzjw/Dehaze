@@ -27,17 +27,14 @@ void CalcRecover(IplImage *result, IplImage *input, IplImage *transmission, doub
 			t /= 255.0;
 			for (k = 0; k < 3; k++)
 			{
-				a = *(uchar *)(input->imageData + (i) * widthstep + (j) * nch + k);
+				a = *(uchar *)(input->imageData + i * widthstep + j * nch + k);
 				a /= 255.0;
 
 				tmp_res = ((a - A[k]) / MAX(t, t0)) + A[k];
+				tmp_res *= 255.0;
+				tmp_res = tmp_res > 255 ? 255 : (tmp_res < 0 ? 0 : tmp_res);
 
-				if (tmp_res > 1)
-					tmp_res = 1;
-				else if (tmp_res < 0)
-					tmp_res = 0;
-
-				*(uchar *)(result->imageData + (i) * widthstep + (j) * nch + k) = tmp_res * 255.0;
+				*(uchar *)(result->imageData + i * widthstep + j * nch + k) = cvRound(tmp_res);
 			}
 		}
 	}

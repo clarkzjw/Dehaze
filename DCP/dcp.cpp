@@ -1,7 +1,4 @@
-#include "dcp.h"
-
-#include <iostream>
-using namespace std;
+#include "dcp_core.h"
 
 void dehaze(IplImage *recover, IplImage *input)
 {
@@ -12,18 +9,36 @@ void dehaze(IplImage *recover, IplImage *input)
 	IplImage *transmission = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
 	IplImage *refine_transmission = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
 
-	int darkchannelradius = MIN(width, height) * 0.02;
-
-	
-
+	int darkchannelradius = cvRound(MIN(width, height) * 0.02);
 	double Airlight[3] = { 0.0, 0.0, 0.0 };
-	CalcDarkChannel(darkchannel, input, darkchannelradius);
-	
-	CalcAirlight(darkchannel, input, Airlight);
-	
-	CalcTransmission(transmission, input, Airlight, darkchannelradius);
-	GuidedFilterColor(refine_transmission, input, transmission, 1e-6, 60);
-	CalcRecover(recover, input, refine_transmission, Airlight);
 
-	
+	TicToc t;
+	t.tic();
+	printf("CalcDarkChannel...");
+	CalcDarkChannel(darkchannel, input, darkchannelradius);
+	t.toc();
+
+	t.tic();
+	printf("CalcAirlight...");
+	CalcAirlight(darkchannel, input, Airlight);
+	t.toc();
+
+	t.tic();
+	printf("CalcTransmission...");
+	CalcTransmission(transmission, input, Airlight, darkchannelradius);
+	t.toc();
+
+	t.tic();
+	printf("GuidedFilterColor...");
+	GuidedFilterColor(refine_transmission, input, transmission, 1e-6, 60);
+	t.toc();
+
+	t.tic();
+	printf("CalcRecover...");
+	CalcRecover(recover, input, refine_transmission, Airlight);	
+	t.toc();
+
+	cvReleaseImage(&refine_transmission);
+	cvReleaseImage(&transmission);
+	cvReleaseImage(&darkchannel);
 }

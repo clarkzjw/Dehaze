@@ -22,7 +22,7 @@ void CalcTransmission(IplImage *transmission, IplImage *input, double A[], int r
 				tmp = tmp / A[k] * 255.0;
 
 				tmp = tmp > 255 ? 255 : tmp;
-				*(uchar *)(normalized_input->imageData + i * widthstep + j * nch + k) = tmp;
+				*(uchar *)(normalized_input->imageData + i * widthstep + j * nch + k) = cvRound(tmp);
 			}
 		}
 	}
@@ -35,11 +35,10 @@ void CalcTransmission(IplImage *transmission, IplImage *input, double A[], int r
 			double tran = *(uchar *)(transmission->imageData + i * gwidthstep + j);
 
 			tran = 1 - w * (tran / 255.0);
+			tran *= 255.0;
+			tran = tran > 255 ? 255 : (tran < 0 ? 0 : tran);
 
-			tran = tran > 1 ? 1 : tran;
-			tran = tran < 0 ? 0 : tran;
-
-			*(uchar *)(transmission->imageData + i * gwidthstep + j) = tran * 255;
+			*(uchar *)(transmission->imageData + i * gwidthstep + j) = cvRound(tran);
 		}
 	}
 	cvReleaseImage(&normalized_input);

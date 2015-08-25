@@ -1,10 +1,7 @@
 #include "dcp_core.h"
-#include <malloc.h>
-#include <vector>
-#include <iostream>
-#include <algorithm>
 
-using namespace std;
+#include <algorithm>
+using std::sort;
 
 struct Pixel
 {
@@ -33,7 +30,6 @@ void CalcAirlight(IplImage *darkchannel, IplImage *input, double A[])
 	}
 	sort(v_darkchannel, v_darkchannel + count, [](struct Pixel &a, struct Pixel &b){ return a.value > b.value; });
 
-	
 	IplImage *mask = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
 	cvZero(mask);
 
@@ -65,12 +61,12 @@ void CalcAirlight(IplImage *darkchannel, IplImage *input, double A[])
 
 		sort(v_channel, v_channel + count, [](struct Pixel &a, struct Pixel &b){ return a.value > b.value; });
 		
-		int channel_airlight = 0;
+		double channel_airlight = 0;
 		for (int i = 0; i < count * 0.01; i++)
 		{
 			channel_airlight += v_channel[i].value;
 		}
-		channel_airlight /= (count * 0.01);
+		channel_airlight = channel_airlight / (count * 0.01);
 		A[k] = channel_airlight;
 
 		free(v_channel);

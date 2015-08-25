@@ -1,10 +1,5 @@
 #include "dcp_core.h"
 
-#include <iostream>
-#include <vector>
-
-using namespace std;
-
 void GuidedFilterColor(IplImage *q, IplImage *II, IplImage *p, double eps, int r)
 {
 	int height = q->height;
@@ -35,26 +30,24 @@ void GuidedFilterColor(IplImage *q, IplImage *II, IplImage *p, double eps, int r
 	double tmp_Ir, tmp_Ig, tmp_Ib;
 	double tmp_p, tmp_q;
 
-	vector<double> v_ak_r;
-	vector<double> v_ak_g;
-	vector<double> v_ak_b;
-	vector<double> v_bk;
+	double *v_ak_r = (double *)malloc(sizeof(double) * height * width);
+	double *v_ak_g = (double *)malloc(sizeof(double) * height * width);
+	double *v_ak_b = (double *)malloc(sizeof(double) * height * width);
+	double *v_bk = (double *)malloc(sizeof(double) * height * width);
 
-	for (i = 1; i <= height; i++)
+	int count = 0;
+
+	for (i = 0; i < height; i++)
 	{
-		for (j = 1; j <= width; j++)
+		for (j = 0; j < width; j++)
 		{
 			st_row = i - r, ed_row = i + r;
 			st_col = j - r, ed_col = j + r;
 
-			if (st_row <= 0)
-				st_row = 1;
-			if (ed_row > height)
-				ed_row = height;
-			if (st_col <= 0)
-				st_col = 1;
-			if (ed_col > width)
-				ed_col = width;
+			st_row = st_row < 0 ? 0 : st_row;
+			ed_row = ed_row >= height ? (height - 1) : ed_row;
+			st_col = st_col < 0 ? 0 : st_col;
+			ed_col = ed_col >= width ? (width - 1) : ed_col;
 
 			sum_Ir = sum_Ig = sum_Ib = 0;
 			sum_Ir_square = sum_Ig_square = sum_Ib_square = 0;
@@ -67,11 +60,11 @@ void GuidedFilterColor(IplImage *q, IplImage *II, IplImage *p, double eps, int r
 			{
 				for (n = st_col; n <= ed_col; n++)
 				{
-					tmp_Ib = *(uchar *)(II->imageData + (m - 1) * widthstep + (n - 1) * nch);
-					tmp_Ig = *(uchar *)(II->imageData + (m - 1) * widthstep + (n - 1) * nch + 1);
-					tmp_Ir = *(uchar *)(II->imageData + (m - 1) * widthstep + (n - 1) * nch + 2);
+					tmp_Ib = *(uchar *)(II->imageData + (m) * widthstep + (n) * nch);
+					tmp_Ig = *(uchar *)(II->imageData + (m) * widthstep + (n) * nch + 1);
+					tmp_Ir = *(uchar *)(II->imageData + (m) * widthstep + (n) * nch + 2);
 
-					tmp_p = *(uchar *)(p->imageData + (m - 1) * gwidthstep + (n - 1));
+					tmp_p = *(uchar *)(p->imageData + (m) * gwidthstep + (n));
 
 					sum_Ib += tmp_Ib;
 					sum_Ig += tmp_Ig;
@@ -118,41 +111,34 @@ void GuidedFilterColor(IplImage *q, IplImage *II, IplImage *p, double eps, int r
 
 			bk = (sum_PiIg - sum_IrIg * ak_r - (sum_Ig_square + w * eps) * ak_g - sum_IgIb * ak_b) / sum_Ig;
 
-			tmp_Ib = *(uchar *)(II->imageData + (i - 1) * widthstep + (j - 1) * nch);
-			tmp_Ig = *(uchar *)(II->imageData + (i - 1) * widthstep + (j - 1) * nch + 1);
-			tmp_Ir = *(uchar *)(II->imageData + (i - 1) * widthstep + (j - 1) * nch + 2);
+			tmp_Ib = *(uchar *)(II->imageData + i * widthstep + j * nch);
+			tmp_Ig = *(uchar *)(II->imageData + i * widthstep + j * nch + 1);
+			tmp_Ir = *(uchar *)(II->imageData + i * widthstep + j * nch + 2);
 
 			tmp_q = ak_b * tmp_Ib + ak_g * tmp_Ig + ak_r * tmp_Ir + bk;
+			tmp_q = tmp_q > 255 ? 255 : (tmp_q < 0 ? 0 : tmp_q);
 
-			if (tmp_q > 255)
-				tmp_q = 255;
-			else if (tmp_q < 0)
-				tmp_q = 0;
+			*(uchar *)(q->imageData + i * gwidthstep + j) = cvRound(tmp_q);
 
-			*(uchar *)(q->imageData + (i - 1) * gwidthstep + (j - 1)) = tmp_q;
-
-			v_ak_b.push_back(ak_b);
-			v_ak_g.push_back(ak_g);
-			v_ak_r.push_back(ak_r);
-			v_bk.push_back(bk);
+			v_ak_b[count] = ak_b;
+			v_ak_g[count] = ak_g;
+			v_ak_r[count] = ak_r;
+			v_bk[count] = bk;
+			count++;
 		}
 	}
 
-	for (int i = 1; i <= height; i++)
+	for (int i = 0; i < height; i++)
 	{
-		for (int j = 1; j <= width; j++)
+		for (int j = 0; j < width; j++)
 		{
 			st_row = i - r, ed_row = i + r;
 			st_col = j - r, ed_col = j + r;
 
-			if (st_row <= 0)
-				st_row = 1;
-			if (ed_row > height)
-				ed_row = height;
-			if (st_col <= 0)
-				st_col = 1;
-			if (ed_col > width)
-				ed_col = width;
+			st_row = st_row < 0 ? 0 : st_row;
+			ed_row = ed_row >= height ? (height - 1) : ed_row;
+			st_col = st_col < 0 ? 0 : st_col;
+			ed_col = ed_col >= width ? (width - 1) : ed_col;
 
 			double ak_r, ak_g, ak_b, bk;
 			ak_r = ak_g = ak_b = bk = 0;
@@ -162,10 +148,10 @@ void GuidedFilterColor(IplImage *q, IplImage *II, IplImage *p, double eps, int r
 			{
 				for (int n = st_col; n <= ed_col; n++)
 				{
-					ak_r += v_ak_r[(m - 1) * width + n - 1];
-					ak_g += v_ak_g[(m - 1) * width + n - 1];
-					ak_b += v_ak_b[(m - 1) * width + n - 1];
-					bk += v_bk[(m - 1) * width + n - 1];
+					ak_r += v_ak_r[(m) * width + n];
+					ak_g += v_ak_g[(m) * width + n];
+					ak_b += v_ak_b[(m) * width + n];
+					bk += v_bk[(m) * width + n];
 					number++;
 				}
 			}
@@ -175,18 +161,18 @@ void GuidedFilterColor(IplImage *q, IplImage *II, IplImage *p, double eps, int r
 			ak_b /= number;
 			bk /= number;
 
-			tmp_Ib = *(uchar *)(II->imageData + (i - 1) * widthstep + (j - 1) * nch);
-			tmp_Ig = *(uchar *)(II->imageData + (i - 1) * widthstep + (j - 1) * nch + 1);
-			tmp_Ir = *(uchar *)(II->imageData + (i - 1) * widthstep + (j - 1) * nch + 2);
+			tmp_Ib = *(uchar *)(II->imageData + i * widthstep + j * nch);
+			tmp_Ig = *(uchar *)(II->imageData + i * widthstep + j * nch + 1);
+			tmp_Ir = *(uchar *)(II->imageData + i * widthstep + j * nch + 2);
 
 			tmp_q = ak_b * tmp_Ib + ak_g * tmp_Ig + ak_r * tmp_Ir + bk;
-
-			if (tmp_q > 255)
-				tmp_q = 255;
-			else if (tmp_q < 0)
-				tmp_q = 0;
-
-			*(uchar *)(q->imageData + (i - 1) * gwidthstep + (j - 1)) = tmp_q;
+			tmp_q = tmp_q > 255 ? 255 : (tmp_q < 0 ? 0 : tmp_q);
+			
+			*(uchar *)(q->imageData + i * gwidthstep + j) = cvRound(tmp_q);
 		}
 	}
+	free(v_ak_b);
+	free(v_ak_g);
+	free(v_ak_r);
+	free(v_bk);
 }
